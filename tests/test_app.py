@@ -23,19 +23,28 @@ def reset_activities():
 # ---------------------------------------------------------------------------
 
 def test_get_activities_returns_200(client):
+    # Act
     response = client.get("/activities")
+
+    # Assert
     assert response.status_code == 200
 
 
 def test_get_activities_returns_dict(client):
+    # Act
     response = client.get("/activities")
+
+    # Assert
     data = response.json()
     assert isinstance(data, dict)
     assert len(data) > 0
 
 
 def test_get_activities_contains_expected_fields(client):
+    # Act
     response = client.get("/activities")
+
+    # Assert
     data = response.json()
     for activity in data.values():
         assert "description" in activity
@@ -49,34 +58,60 @@ def test_get_activities_contains_expected_fields(client):
 # ---------------------------------------------------------------------------
 
 def test_signup_success(client):
+    # Arrange
+    email = "newstudent@mergington.edu"
+    activity_name = "Chess Club"
+
+    # Act
     response = client.post(
-        "/activities/Chess Club/signup",
-        params={"email": "newstudent@mergington.edu"},
+        f"/activities/{activity_name}/signup",
+        params={"email": email},
     )
+
+    # Assert
     assert response.status_code == 200
-    assert "newstudent@mergington.edu" in response.json()["message"]
+    assert email in response.json()["message"]
 
 
 def test_signup_adds_participant(client):
+    # Arrange
     email = "newstudent@mergington.edu"
-    client.post("/activities/Chess Club/signup", params={"email": email})
-    assert email in activities["Chess Club"]["participants"]
+    activity_name = "Chess Club"
+
+    # Act
+    client.post(f"/activities/{activity_name}/signup", params={"email": email})
+
+    # Assert
+    assert email in activities[activity_name]["participants"]
 
 
 def test_signup_nonexistent_activity_returns_404(client):
+    # Arrange
+    email = "student@mergington.edu"
+    activity_name = "Nonexistent Activity"
+
+    # Act
     response = client.post(
-        "/activities/Nonexistent Activity/signup",
-        params={"email": "student@mergington.edu"},
+        f"/activities/{activity_name}/signup",
+        params={"email": email},
     )
+
+    # Assert
     assert response.status_code == 404
 
 
 def test_signup_duplicate_returns_400(client):
+    # Arrange
     email = "michael@mergington.edu"  # already in Chess Club
+    activity_name = "Chess Club"
+
+    # Act
     response = client.post(
-        "/activities/Chess Club/signup",
+        f"/activities/{activity_name}/signup",
         params={"email": email},
     )
+
+    # Assert
     assert response.status_code == 400
 
 
@@ -85,32 +120,58 @@ def test_signup_duplicate_returns_400(client):
 # ---------------------------------------------------------------------------
 
 def test_unregister_success(client):
+    # Arrange
     email = "michael@mergington.edu"  # already in Chess Club
+    activity_name = "Chess Club"
+
+    # Act
     response = client.delete(
-        "/activities/Chess Club/signup",
+        f"/activities/{activity_name}/signup",
         params={"email": email},
     )
+
+    # Assert
     assert response.status_code == 200
     assert email in response.json()["message"]
 
 
 def test_unregister_removes_participant(client):
-    email = "michael@mergington.edu"
-    client.delete("/activities/Chess Club/signup", params={"email": email})
-    assert email not in activities["Chess Club"]["participants"]
+    # Arrange
+    email = "michael@mergington.edu"  # already in Chess Club
+    activity_name = "Chess Club"
+
+    # Act
+    client.delete(f"/activities/{activity_name}/signup", params={"email": email})
+
+    # Assert
+    assert email not in activities[activity_name]["participants"]
 
 
 def test_unregister_nonexistent_activity_returns_404(client):
+    # Arrange
+    email = "student@mergington.edu"
+    activity_name = "Nonexistent Activity"
+
+    # Act
     response = client.delete(
-        "/activities/Nonexistent Activity/signup",
-        params={"email": "student@mergington.edu"},
+        f"/activities/{activity_name}/signup",
+        params={"email": email},
     )
+
+    # Assert
     assert response.status_code == 404
 
 
 def test_unregister_student_not_signed_up_returns_404(client):
+    # Arrange
+    email = "notregistered@mergington.edu"
+    activity_name = "Chess Club"
+
+    # Act
     response = client.delete(
-        "/activities/Chess Club/signup",
-        params={"email": "notregistered@mergington.edu"},
+        f"/activities/{activity_name}/signup",
+        params={"email": email},
     )
+
+    # Assert
     assert response.status_code == 404
